@@ -1,11 +1,13 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	mgo "github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
+	"golang.org/x/crypto/bcrypt"
 	mgodo "gopkg.in/lujiacn/mgodo.v0"
 )
 
@@ -20,19 +22,47 @@ const (
 
 type User struct {
 	mgodo.BaseModel `bson:",inline"`
-	Identity        string `bson:"Identity,omitempty"` //if ldap is SAMAccount
+	Identity        string `bson:"Identity,omitempty"` //if ldap is SAMAccount, if local is lowercase(email)
 	Name            string `bson:"Name,omitempty"`
 	First           string `bson:"First,omitempty"`
 	Last            string `bson:"Last,omitempty"`
 	Mail            string `bson:"Mail,omitempty"`
 	Depart          string `bson:"Depart,omitempty"`
 	Avatar          string `bson:"Avatar,omitempty"`
+	Password        string `bson:"Password,omitempty"` // encryped password
+	AuthMethod      string `bson:"AuthMethod,omitempty"`
+}
+
+func checkPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
 }
 
 func (c *User) GetAvatar() {
 	if c.Avatar == "" {
 		c.Avatar = DefaultAvatar
 	}
+}
+
+func CheckUser(account, password string) (*User, error) {
+	s := mgodo.NewMgoSession()
+	defer s.Close()
+	user := new(User)
+	do := mgodo.New(s, user)
+	do.Query = bson.M{"Identity": strings.ToLower(account)}
+	do.GetByQ()
+	if !user.Id.Valid() {
+		return nil, errors.New("User not exist")
+	}
+	if checkPasswordHash(password, user.Password) {
+		return user, nil
+	}
+	return nil, errors.New("Invalid password")
 }
 
 // GetName Parse full name from Li, Ming R&D/CN format
