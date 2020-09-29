@@ -15,7 +15,7 @@ import (
 
 var (
 	grpcDial   string
-	authMethod string // default grpc
+	AuthMethod string // default grpc
 )
 
 //Init reading LDAP configuration
@@ -27,19 +27,20 @@ func Init() {
 	}
 	grpcAuthPort := revel.Config.StringDefault("grpcauth.port", "50051")
 	grpcDial = grpcAuthServer + ":" + grpcAuthPort
-	authMethod = revel.Config.StringDefault("grpcauth.method", "grpc")
+	AuthMethod = revel.Config.StringDefault("grpcauth.method", "grpc")
+	revel.AppLog.Infof("AuthMethod is %s", AuthMethod)
 }
 
 //Authenticate do auth and return Auth object including user information and lognin success or not
 func Authenticate(account, password string) *gAuth.AuthReply {
-	switch authMethod {
+	switch AuthMethod {
 	case "local":
 		// check local or grpc
 		user, err := models.CheckUser(account, password)
 		if err != nil {
 			return &gAuth.AuthReply{IsAuthenticated: false, Error: fmt.Sprintf("%v", err)}
 		}
-		return &gAuth.AuthReply{IsAuthenticated: true, Account: user.Identity}
+		return &gAuth.AuthReply{IsAuthenticated: true, Account: user.Identity, Email: user.Mail, Avatar: user.Avatar, Name: user.Name, First: user.First, Last: user.Last}
 
 	default:
 		conn, err := grpc.Dial(grpcDial, grpc.WithInsecure())
@@ -57,6 +58,9 @@ func Authenticate(account, password string) *gAuth.AuthReply {
 }
 
 func Query(account string) *gAuth.QueryReply {
+	if AuthMethod == "local" {
+		return nil
+	}
 	conn, err := grpc.Dial(grpcDial, grpc.WithInsecure())
 	if err != nil {
 		return &gAuth.QueryReply{Error: fmt.Sprintf("Connect auth server failed, %v", err)}
@@ -72,6 +76,10 @@ func Query(account string) *gAuth.QueryReply {
 }
 
 func QueryMail(email string) *gAuth.QueryReply {
+	if AuthMethod == "local" {
+		return nil
+	}
+
 	conn, err := grpc.Dial(grpcDial, grpc.WithInsecure())
 	if err != nil {
 		return &gAuth.QueryReply{Error: fmt.Sprintf("Connect auth server failed, %v", err)}

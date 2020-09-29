@@ -29,6 +29,7 @@ type User struct {
 	Mail            string `bson:"Mail,omitempty"`
 	Depart          string `bson:"Depart,omitempty"`
 	Avatar          string `bson:"Avatar,omitempty"`
+	RawPassword     string `bson:"-"`
 	Password        string `bson:"Password,omitempty"` // encryped password
 	AuthMethod      string `bson:"AuthMethod,omitempty"`
 }
@@ -41,6 +42,14 @@ func checkPasswordHash(password, hash string) bool {
 func hashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(bytes), err
+}
+
+// Create User
+func (m *User) Add() {
+	s := mgodo.NewMgoSession()
+	defer s.Close()
+	m.Password, _ = hashPassword(m.RawPassword)
+	mgodo.New(s, m).Create()
 }
 
 func (c *User) GetAvatar() {

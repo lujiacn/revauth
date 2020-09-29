@@ -15,25 +15,6 @@ type Auth struct {
 	mgodo.MgoController
 }
 
-// CreateUser
-func (c *Auth) CreateUser(account, password string) revel.Result {
-	nextUrl := c.Params.Get("nextUrl")
-	if nextUrl == "" {
-		nextUrl = c.Request.Referer()
-	}
-	if account == "" || password == "" {
-		c.Flash.Error("Please fill in account and password")
-		return c.Redirect(nextUrl)
-	}
-
-	//save current user information
-	user := new(models.User)
-	user.Identity = strings.ToLower(account)
-	user.Password, _ = hashPassword(password)
-	mgodo.New(c.MgoSession, user).Create()
-	return c.Redirect("/login")
-}
-
 //Authenticate for LDAP authenticate
 func (c *Auth) Authenticate(account, password string) revel.Result {
 	//get nextUrl
