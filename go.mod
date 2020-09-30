@@ -16,6 +16,7 @@ require (
 	github.com/revel/config v1.0.0 // indirect
 	github.com/revel/revel v1.0.0
 	github.com/stretchr/testify v1.6.1 // indirect
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/net v0.0.0-20200822124328-c89045814202
 	google.golang.org/grpc v1.31.1
 	gopkg.in/lujiacn/mgodo.v0 v0.0.0-00010101000000-000000000000
