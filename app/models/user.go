@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	mgo "github.com/globalsign/mgo"
-	"github.com/globalsign/mgo/bson"
+	mongodo "github.com/lujiacn/mongodo"
+	bson "go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/crypto/bcrypt"
-	mgodo "gopkg.in/lujiacn/mgodo.v0"
 )
 
 const (
@@ -21,17 +20,17 @@ const (
 )
 
 type User struct {
-	mgodo.BaseModel `bson:",inline"`
-	Identity        string `bson:"Identity,omitempty"` //if ldap is SAMAccount, if local is lowercase(email)
-	Name            string `bson:"Name,omitempty"`
-	First           string `bson:"First,omitempty"`
-	Last            string `bson:"Last,omitempty"`
-	Mail            string `bson:"Mail,omitempty"`
-	Depart          string `bson:"Depart,omitempty"`
-	Avatar          string `bson:"Avatar,omitempty"`
-	RawPassword     string `bson:"-"`
-	Password        string `bson:"Password,omitempty"` // encryped password
-	AuthMethod      string `bson:"AuthMethod,omitempty"`
+	mongodo.BaseModel `bson:",inline"`
+	Identity          string `bson:"Identity,omitempty"` //if ldap is SAMAccount, if local is lowercase(email)
+	Name              string `bson:"Name,omitempty"`
+	First             string `bson:"First,omitempty"`
+	Last              string `bson:"Last,omitempty"`
+	Mail              string `bson:"Mail,omitempty"`
+	Depart            string `bson:"Depart,omitempty"`
+	Avatar            string `bson:"Avatar,omitempty"`
+	RawPassword       string `bson:"-"`
+	Password          string `bson:"Password,omitempty"` // encryped password
+	AuthMethod        string `bson:"AuthMethod,omitempty"`
 }
 
 func checkPasswordHash(password, hash string) bool {
@@ -46,10 +45,8 @@ func hashPassword(password string) (string, error) {
 
 // Create User
 func (m *User) Add() {
-	s := mgodo.NewMgoSession()
-	defer s.Close()
 	m.Password, _ = hashPassword(m.RawPassword)
-	mgodo.New(s, m).Create()
+	mongodo.New(m).Create()
 }
 
 func (c *User) GetAvatar() {
@@ -59,13 +56,13 @@ func (c *User) GetAvatar() {
 }
 
 func CheckUser(account, password string) (*User, error) {
-	s := mgodo.NewMgoSession()
-	defer s.Close()
+	//s := mongodo.NewMgoSession()
+	//defer s.Close()
 	user := new(User)
-	do := mgodo.New(s, user)
+	do := mongodo.New(user)
 	do.Query = bson.M{"Identity": strings.ToLower(account)}
 	do.GetByQ()
-	if !user.Id.Valid() {
+	if user.ID.IsZero() {
 		return nil, errors.New("User not exist")
 	}
 	if checkPasswordHash(password, user.Password) {
@@ -96,32 +93,29 @@ func (c *User) GetName() string {
 }
 
 //Save authorized saUser to local User
-func (c *User) SaveUser(s *mgo.Session) error {
+func (c *User) SaveUser() error {
 	c.GetAvatar()
 	//check if user exist
 	u := new(User)
 	q := bson.M{"Identity": c.Identity}
-	udo := mgodo.NewDo(s, mgodo.DBName, u)
+	udo := mongodo.New(u)
 	udo.Operator = "SYS"
 	udo.Query = q
-	err := udo.GetByQ()
-	if err != nil && err != mgo.ErrNotFound {
-		return err
-	}
+	udo.GetByQ()
 
-	cdo := mgodo.NewDo(s, mgodo.DBName, c)
+	cdo := mongodo.New(c)
 	cdo.Operator = "SYS"
 
 	//if user not exist create new
-	if !u.Id.Valid() {
-		err = cdo.Create()
+	if u.ID.IsZero() {
+		err := cdo.Create()
 		if err != nil {
 			return err
 		}
 	} else {
 		//if user exist,update
-		c.Id = u.Id
-		err = cdo.Save()
+		c.ID = u.ID
+		err := cdo.Save()
 		if err != nil {
 			return err
 		}

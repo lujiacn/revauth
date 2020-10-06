@@ -7,12 +7,14 @@ import (
 	"github.com/lujiacn/revauth/app/models"
 	"github.com/revel/revel"
 	"github.com/revel/revel/cache"
-	mgodo "gopkg.in/lujiacn/mgodo.v0"
+
+	//mongodo "gopkg.in/lujiacn/mongodo.v0"
+	mongodo "github.com/lujiacn/mongodo"
 )
 
 type Auth struct {
 	*revel.Controller
-	mgodo.MgoController
+	mongodo.MongoController
 }
 
 //Authenticate for LDAP authenticate
@@ -35,7 +37,7 @@ func (c *Auth) Authenticate(account, password string) revel.Result {
 		loginLog.Account = account
 		loginLog.Status = "FAILURE"
 		loginLog.IPAddress = c.Request.RemoteAddr
-		mgodo.New(c.MgoSession, loginLog).Create()
+		mongodo.New(loginLog).Create()
 
 		c.Flash.Error("Authenticate failed: %v", authUser.Error)
 		return c.Redirect("/login?nextUrl=%s", nextUrl)
@@ -46,7 +48,7 @@ func (c *Auth) Authenticate(account, password string) revel.Result {
 	loginLog.Account = account
 	loginLog.Status = "SUCCESS"
 	loginLog.IPAddress = c.Request.RemoteAddr
-	mgodo.New(c.MgoSession, loginLog).Create()
+	mongodo.New(loginLog).Create()
 
 	c.Session["Identity"] = strings.ToLower(account)
 
@@ -65,9 +67,7 @@ func (c *Auth) Authenticate(account, password string) revel.Result {
 
 	go func(user *models.User) {
 		// save to local user
-		s := mgodo.NewMgoSession()
-		defer s.Close()
-		err := user.SaveUser(s)
+		err := user.SaveUser()
 		if err != nil {
 			revel.AppLog.Errorf("Save user error: %v", err)
 		}

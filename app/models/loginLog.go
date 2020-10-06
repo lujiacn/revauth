@@ -1,22 +1,21 @@
 package models
 
 import (
-	mgo "github.com/globalsign/mgo"
-	"github.com/globalsign/mgo/bson"
-	mgodo "gopkg.in/lujiacn/mgodo.v0"
+	"github.com/lujiacn/mongodo"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type LoginLog struct {
-	mgodo.BaseModel `bson:",inline"`
-	Account         string `bson:"Account,omitempty"`
-	Status          string `bson:"Status,omitempty"`
-	IPAddress       string `bson:"IPAddress,omitempty"`
-	User            *User  `bson:"-"`
+	mongodo.BaseModel `bson:",inline"`
+	Account           string `bson:"Account,omitempty"`
+	Status            string `bson:"Status,omitempty"`
+	IPAddress         string `bson:"IPAddress,omitempty"`
+	User              *User  `bson:"-"`
 }
 
-func (m *LoginLog) GenUser(s *mgo.Session) {
+func (m *LoginLog) GenUser() {
 	user := new(User)
-	do := mgodo.New(s, user)
+	do := mongodo.New(user)
 	do.Query = bson.M{"Identity": m.Account}
 	do.GetByQ()
 	m.User = user

@@ -4,6 +4,8 @@ go 1.14
 
 replace gopkg.in/lujiacn/mgodo.v0 => github.com/lujiacn/mgodo v0.21.1
 
+replace github.com/lujiacn/mongodo => /Users/i0040679/workspace/github_repo/mongodo
+
 require (
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b // indirect
 	github.com/garyburd/redigo v1.6.2 // indirect

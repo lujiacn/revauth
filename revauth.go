@@ -8,7 +8,6 @@ import (
 	"github.com/lujiacn/revauth/app/models"
 	gAuth "github.com/lujiacn/revauth/auth"
 	"google.golang.org/grpc"
-	"gopkg.in/lujiacn/mgodo.v0"
 
 	"github.com/revel/revel"
 )
@@ -112,9 +111,7 @@ func QueryMailAndSave(email string) (*models.User, error) {
 	user.Avatar = authUser.Avatar
 	user.Name = authUser.Name
 	user.Depart = authUser.Depart
-	s := mgodo.NewMgoSession()
-	defer s.Close()
-	user.SaveUser(s)
+	user.SaveUser()
 	return user, nil
 }
 
@@ -136,8 +133,6 @@ func QueryAndSave(account string) (*models.User, error) {
 	user.Avatar = authUser.Avatar
 	user.Name = authUser.Name
 	user.Depart = authUser.Depart
-	s := mgodo.NewMgoSession()
-	defer s.Close()
-	user.SaveUser(s)
+	user.SaveUser()
 	return user, nil
 }
