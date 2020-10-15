@@ -27,7 +27,7 @@ func (c *Auth) Authenticate(account, password string) revel.Result {
 
 	if account == "" || password == "" {
 		c.Flash.Error("Please fill in account and password")
-		return c.Redirect("/login?nextUrl=%s", nextUrl)
+		return c.Redirect(c.Request.Referer())
 	}
 
 	authUser := revauth.Authenticate(account, password)
@@ -40,7 +40,7 @@ func (c *Auth) Authenticate(account, password string) revel.Result {
 		mongodo.New(loginLog).Create()
 
 		c.Flash.Error("Authenticate failed: %v", authUser.Error)
-		return c.Redirect("/login?nextUrl=%s", nextUrl)
+		return c.Redirect(c.Request.Referer())
 	}
 
 	// save login log
