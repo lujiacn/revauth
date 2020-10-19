@@ -2,8 +2,6 @@ module github.com/lujiacn/revauth
 
 go 1.14
 
-//replace github.com/lujiacn/mongodo => /Users/i0040679/workspace/github_repo/mongodo
-
 replace gopkg.in/stretchr/testify.v1 => github.com/stretchr/testify v1.6.1
 
 require (
