@@ -8,13 +8,11 @@ import (
 	"github.com/revel/revel"
 	"github.com/revel/revel/cache"
 
-	//mongodo "gopkg.in/lujiacn/mongodo.v0"
-	mongodo "github.com/lujiacn/mongodo"
+	"github.com/lujiacn/mongodo"
 )
 
 type Auth struct {
 	*revel.Controller
-	mongodo.MongoController
 }
 
 //Authenticate for LDAP authenticate
