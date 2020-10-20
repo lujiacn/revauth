@@ -56,8 +56,6 @@ func (c *User) GetAvatar() {
 }
 
 func CheckUser(account, password string) (*User, error) {
-	//s := mongodo.NewMgoSession()
-	//defer s.Close()
 	user := new(User)
 	do := mongodo.New(user)
 	do.Query = bson.M{"Identity": strings.ToLower(account)}
