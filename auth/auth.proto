@@ -2,7 +2,6 @@ syntax = "proto3";
 
 service auth {
   rpc authenticate (AuthRequest) returns (AuthReply) {}
-  rpc query(QueryRequest) returns (QueryReply){}
 }
 
 message  AuthRequest {
@@ -20,21 +19,4 @@ message  AuthReply       {
   string email           = 7;
   string depart          = 8;
   string avatar          = 9;
-}
-
-message QueryRequest {
-  string account = 1;
-  string email   = 2;
-}
-
-message  QueryReply {
-  bool   notExist   = 1;
-  string error      = 2;
-  string account    = 3;
-  string name       = 4;
-  string first      = 5;
-  string last       = 6;
-  string email      = 7;
-  string depart     = 8;
-  string avatar     = 9;
 }
