@@ -31,6 +31,7 @@ type User struct {
 	RawPassword       string `bson:"-"`
 	Password          string `bson:"Password,omitempty"` // encryped password
 	AuthMethod        string `bson:"AuthMethod,omitempty"`
+	IsNoExist         bool   `bson:"IsNotExist,omitempty"`
 }
 
 func checkPasswordHash(password, hash string) bool {
