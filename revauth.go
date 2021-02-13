@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/lujiacn/revauth/app/models"
 	gAuth "github.com/lujiacn/revauth/auth"
@@ -62,15 +63,21 @@ func Query(account string) (*gAuth.QueryReply, error) {
 		// TODO, search local user list
 		return nil, errors.New("Not implemented")
 	}
-	conn, err := grpc.Dial(grpcDial, grpc.WithInsecure())
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	defer cancel()
+
+	conn, err := grpc.DialContext(ctx, grpcDial, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	//defer conn.Close()
 	c := gAuth.NewAuthClient(conn)
 	r, err := c.Query(context.Background(), &gAuth.QueryRequest{Account: account})
 	if err != nil {
-		r.NotExist = true
+		if r != nil {
+			r.NotExist = true
+		}
+		return nil, err
 	}
 	return r, nil
 
@@ -90,7 +97,10 @@ func QueryMail(email string) (*gAuth.QueryReply, error) {
 	c := gAuth.NewAuthClient(conn)
 	r, err := c.Query(context.Background(), &gAuth.QueryRequest{Email: email})
 	if err != nil {
-		r.NotExist = true
+		if r != nil {
+			r.NotExist = true
+		}
+		return nil, err
 	}
 	return r, nil
 }
