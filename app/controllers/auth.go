@@ -1,12 +1,15 @@
 package controllers
 
 import (
+	"encoding/base64"
 	"strings"
+	"time"
 
 	"github.com/lujiacn/revauth"
 	"github.com/lujiacn/revauth/app/models"
 	"github.com/revel/revel"
 	"github.com/revel/revel/cache"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/lujiacn/mongodo"
 )
@@ -84,4 +87,25 @@ func (c *Auth) Logout() revel.Result {
 	c.Session = make(map[string]interface{})
 	c.Flash.Success("You have logged out.")
 	return c.Redirect("/")
+}
+
+// Avatar
+
+func (c *Auth) Avatar(ident string) revel.Result {
+	var avatar string
+	record := new(models.User)
+	do := mongodo.New(record)
+	do.Query = bson.M{"Identity": ident}
+	do.GetByQ()
+
+	if record.ID.IsZero() {
+		avatar = models.DefaultAvatar
+	} else {
+		record.GetAvatar()
+		avatar = record.Avatar
+	}
+
+	pngReader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(avatar))
+
+	return c.RenderBinary(pngReader, ident+".png", revel.Inline, time.Now())
 }

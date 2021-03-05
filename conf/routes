@@ -1,6 +1,6 @@
-GET  /logout      Auth.Logout
-POST /logout      Auth.Logout
-POST /login       Auth.Authenticate
-POST /create_user AuthUser.CreateUser
-GET  /new_user    AuthUser.NewUser
-
+GET  /logout        Auth.Logout
+POST /logout        Auth.Logout
+POST /login         Auth.Authenticate
+POST /create_user   AuthUser.CreateUser
+GET  /new_user      AuthUser.NewUser
+GET  /avatar/:ident Auth.Avatar

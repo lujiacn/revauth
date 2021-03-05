@@ -2,6 +2,7 @@ package revauth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -56,45 +57,41 @@ func Authenticate(account, password string) *gAuth.AuthReply {
 	}
 }
 
-func Query(account string) *gAuth.QueryReply {
+func handleQuery(q *gAuth.QueryRequest) (*gAuth.QueryReply, error) {
 	if AuthMethod == "local" {
-		return nil
+		return nil, errors.New("NA for local auth method")
 	}
 	conn, err := grpc.Dial(grpcDial, grpc.WithInsecure())
 	if err != nil {
-		return &gAuth.QueryReply{Error: fmt.Sprintf("Connect auth server failed, %v", err)}
+		//return &gAuth.QueryReply{Error: fmt.Sprintf("Connect auth server failed, %v", err)}
+		return nil, err
 	}
 	defer conn.Close()
 	c := gAuth.NewAuthClient(conn)
-	r, err := c.Query(context.Background(), &gAuth.QueryRequest{Account: account})
+	//r, err := c.Query(context.Background(), &gAuth.QueryRequest{Account: account})
+	r, err := c.Query(context.Background(), q)
 	if err != nil {
-		return &gAuth.QueryReply{Error: fmt.Sprintf("User not found: %v ", err)}
+		//return &gAuth.QueryReply{Error: fmt.Sprintf("User not found: %v ", err)}
+		return nil, err
 	}
-	return r
-
+	return r, nil
 }
 
-func QueryMail(email string) *gAuth.QueryReply {
-	if AuthMethod == "local" {
-		return nil
-	}
+func Query(account string) (*gAuth.QueryReply, error) {
+	q := &gAuth.QueryRequest{Account: account}
+	return handleQuery(q)
+}
 
-	conn, err := grpc.Dial(grpcDial, grpc.WithInsecure())
-	if err != nil {
-		return &gAuth.QueryReply{Error: fmt.Sprintf("Connect auth server failed, %v", err)}
-	}
-	defer conn.Close()
-	c := gAuth.NewAuthClient(conn)
-	r, err := c.Query(context.Background(), &gAuth.QueryRequest{Email: email})
-	if err != nil {
-		return &gAuth.QueryReply{Error: fmt.Sprintf("User not found: %v ", err)}
-	}
-	return r
-
+func QueryMail(email string) (*gAuth.QueryReply, error) {
+	q := &gAuth.QueryRequest{Email: email}
+	return handleQuery(q)
 }
 
 func QueryMailAndSave(email string) (*models.User, error) {
-	authUser := QueryMail(email)
+	authUser, err := QueryMail(email)
+	if err != nil {
+		return nil, err
+	}
 
 	if authUser.Error != "" && authUser.Error != "<nil>" {
 		fmt.Println("Errors", authUser.Error)
@@ -116,7 +113,10 @@ func QueryMailAndSave(email string) (*models.User, error) {
 }
 
 func QueryAndSave(account string) (*models.User, error) {
-	authUser := Query(account)
+	authUser, err := Query(account)
+	if err != nil {
+		return nil, err
+	}
 
 	if authUser.Error != "" && authUser.Error != "<nil>" {
 		fmt.Println("Errors", authUser.Error)
